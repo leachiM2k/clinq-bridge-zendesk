@@ -1,10 +1,9 @@
 {
-  "name": "clinq-bridge-teamleader",
-  "version": "1.0.0",
+  "name": "clinq-bridge-zendesk",
   "private": true,
-  "description": "CLINQ-Bridge for Teamleader contacts",
+  "description": "CLINQ-Bridge for Zendesk contacts",
   "main": "dist/index.js",
-  "repository": "git@github.com:sipgate/clinq-bridge-teamleader.git",
+  "repository": "git@github.com:sipgate/clinq-bridge-zendesk.git",
   "contributors": [
     {
       "name": "Benjamin Kluck",
@@ -50,7 +49,7 @@
     }
   },
   "lint-staged": {
-    "*.{ts}": [
+    "*.ts": [
       "prettier --write",
       "tslint",
       "git add"
