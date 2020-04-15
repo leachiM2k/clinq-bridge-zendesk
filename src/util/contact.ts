@@ -1,57 +1,75 @@
-import { Contact, ContactTemplate, ContactUpdate, PhoneNumber, PhoneNumberLabel } from "@clinq/bridge";
-import { IZendeskContact } from './interfaces';
+import {
+  Contact,
+  ContactTemplate,
+  ContactUpdate,
+  PhoneNumber,
+  PhoneNumberLabel
+} from "@clinq/bridge";
+import { IZendeskContact } from "./interfaces";
 
-export function convertVendorContactToContact(vendorContact: IZendeskContact): Contact | null {
-    if (!vendorContact.id) {
-        return null;
-    }
+export function convertVendorContactToContact(
+  vendorContact: IZendeskContact
+): Contact | null {
+  if (!vendorContact.id) {
+    return null;
+  }
 
-    return {
-        id: String(vendorContact.id),
-        name: vendorContact.name,
-        firstName: null,
-        lastName: null,
-        email: vendorContact.email || null,
-        organization: null,
-        contactUrl: null,
-        avatarUrl: vendorContact.photo ? vendorContact.photo.content_url : null,
-        phoneNumbers: collectPhoneNumbersFromVendorContact(vendorContact)
-    };
+  return {
+    id: String(vendorContact.id),
+    name: vendorContact.name,
+    firstName: null,
+    lastName: null,
+    email: vendorContact.email || null,
+    organization: null,
+    contactUrl: null,
+    avatarUrl: vendorContact.photo ? vendorContact.photo.content_url : null,
+    phoneNumbers: collectPhoneNumbersFromVendorContact(vendorContact)
+  };
 }
 
-function collectPhoneNumbersFromVendorContact(vendorContact: IZendeskContact): PhoneNumber[] {
-    if (vendorContact.phone) {
-        return [{ label: PhoneNumberLabel.WORK, phoneNumber: vendorContact.phone }];
-    }
-    return [];
+function collectPhoneNumbersFromVendorContact(
+  vendorContact: IZendeskContact
+): PhoneNumber[] {
+  if (vendorContact.phone) {
+    return [{ label: PhoneNumberLabel.WORK, phoneNumber: vendorContact.phone }];
+  }
+  return [];
 }
 
-export function convertContactToVendorContact(contact: ContactUpdate | ContactTemplate, id?: string): IZendeskContact {
-    const vendorContact: IZendeskContact = {
-        name: contact.name || [contact.firstName, contact.lastName].join(' ')
+export function convertContactToVendorContact(
+  contact: ContactUpdate | ContactTemplate,
+  id?: string
+): IZendeskContact {
+  const vendorContact: IZendeskContact = {
+    name: contact.name || [contact.firstName, contact.lastName].join(" ")
+  };
+
+  if (id) {
+    vendorContact.id = Number(id);
+  } else {
+    vendorContact.verified = true;
+    vendorContact.role = "end-user";
+  }
+
+  if (contact.email) {
+    vendorContact.email = contact.email;
+  }
+
+  if (Array.isArray(contact.phoneNumbers)) {
+    const phoneNumberMap: { [key: string]: string | null } = {
+      [PhoneNumberLabel.WORK]: null,
+      [PhoneNumberLabel.MOBILE]: null,
+      [PhoneNumberLabel.HOME]: null
     };
+    contact.phoneNumbers.forEach(
+      (entry: PhoneNumber) => (phoneNumberMap[entry.label] = entry.phoneNumber)
+    );
 
-    if (id) {
-        vendorContact.id = Number(id);
-    } else {
-        vendorContact.verified = true;
-        vendorContact.role = 'end-user';
-    }
+    vendorContact.phone =
+      phoneNumberMap[PhoneNumberLabel.WORK] ||
+      phoneNumberMap[PhoneNumberLabel.MOBILE] ||
+      phoneNumberMap[PhoneNumberLabel.HOME];
+  }
 
-    if (contact.email) {
-        vendorContact.email = contact.email;
-    }
-
-    if (Array.isArray(contact.phoneNumbers)) {
-        const phoneNumberMap: { [ key: string ]: string | null; } = {
-            [ PhoneNumberLabel.WORK ]: null,
-            [ PhoneNumberLabel.MOBILE ]: null,
-            [ PhoneNumberLabel.HOME ]: null
-        };
-        contact.phoneNumbers.forEach((entry: PhoneNumber) => phoneNumberMap[ entry.label ] = entry.phoneNumber);
-
-        vendorContact.phone = phoneNumberMap[ PhoneNumberLabel.WORK ] || phoneNumberMap[ PhoneNumberLabel.MOBILE ] || phoneNumberMap[ PhoneNumberLabel.HOME ];
-    }
-
-    return vendorContact;
+  return vendorContact;
 }
